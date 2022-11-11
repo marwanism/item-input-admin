@@ -28,7 +28,7 @@ const userSchema = {
     type: String,
     required: true
   },
-  password: {
+  encryptedPassword: {
     type: String,
     required: true
   },
@@ -79,10 +79,55 @@ const User = mongoose.model("User", userSchema);
 
 
 const admin = new AdminJS({
-  databases: [mongoose]
+  databases: [mongoose],
+  resources: [{
+    resource: User,
+    options: {
+      properties: {
+        encryptedPassword: {
+          isVisible: false,
+        },
+        password: {
+          type: 'string',
+          isVisible: {
+            list: false, edit: true, filter: false, show: false,
+          },
+        },
+      },
+      actions: {
+        new: {
+          before: async (request) => {
+            if(request.payload.password) {
+              request.payload = {
+                ...request.payload,
+                encryptedPassword: await bcrypt.hash(request.payload.password, 10),
+                password: undefined,
+              }
+            }
+            return request
+          },
+        }
+      }
+    }
+  }],
+  rootPath: '/admin',
 });
 
-const adminRouter = AdminJSExpress.buildRouter(admin);
+// Build and use a router which will handle all AdminJS routes
+const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
+  authenticate: async (email, password) => {
+    const user = await User.findOne({ email })
+    if (user) {
+      const matched = await bcrypt.compare(password, user.encryptedPassword)
+      if (matched) {
+        return user
+      }
+    }
+    return false
+  },
+  cookiePassword: 'some-secret-password-used-to-secure-cookie', // TODO: change cookiePassword
+});
+// app.use(admin.options.rootPath, adminRouter);
 app.use(admin.options.rootPath, adminRouter);
 
 /* ------------------------------------ APIs ------------------------------------ */
