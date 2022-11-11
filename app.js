@@ -2,6 +2,14 @@ const bodyParser = require("body-parser");
 const express = require('express');
 const date = require(__dirname + "/helper_functions/date.js");
 const mongoose = require("mongoose");
+const AdminJS = require('adminjs');
+const AdminJSExpress = require('@adminjs/express');
+const AdminJSMongoose = require('@adminjs/mongoose');
+
+AdminJS.registerAdapter({
+  Resource: AdminJSMongoose.Resource,
+  Database: AdminJSMongoose.Database,
+});
 
 const app = express();
 
@@ -14,6 +22,22 @@ const today = date.getDate();
 /* ------------------------------------ Set up database ------------------------------------ */
 
 mongoose.connect("mongodb+srv://itemadmin:mJUAhuf7j9VXkiq6@item-input-db.dhrfvdq.mongodb.net/?retryWrites=true&w=majority", {useNewUrlParser: true, useUnifiedTopology: true});
+
+const userSchema = {
+  email: {
+    type: String,
+    required: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'restricted'],
+    required: true
+  }
+};
 
 const itemSchema = {
   name: {
@@ -51,6 +75,15 @@ const itemSchema = {
 };
 
 const Item = mongoose.model("Item", itemSchema);
+const User = mongoose.model("User", userSchema);
+
+
+const admin = new AdminJS({
+  databases: [mongoose]
+});
+
+const adminRouter = AdminJSExpress.buildRouter(admin);
+app.use(admin.options.rootPath, adminRouter);
 
 /* ------------------------------------ APIs ------------------------------------ */
 
@@ -96,7 +129,7 @@ app.route("/delete")
     Item.findByIdAndDelete(checkedItemID, (err, item) => {
       if (!err) { console.log("Successfully deleted \"" + item.name + "\"!");}
     })
-  
+
 
     res.redirect("/items");
 
