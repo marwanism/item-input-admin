@@ -1,10 +1,22 @@
-const bodyParser = require("body-parser");
-const express = require('express');
-const date = require(__dirname + "/helper_functions/date.js");
-const mongoose = require("mongoose");
-const AdminJS = require('adminjs');
-const AdminJSExpress = require('@adminjs/express');
-const AdminJSMongoose = require('@adminjs/mongoose');
+// const bodyParser = require("body-parser");
+// const express = require('express');
+// const bcrypt = require('bcrypt');
+// const date = require(__dirname + "/helper_functions/date.js");
+// const mongoose = require("mongoose");
+// const AdminJS = require('adminjs');
+// const AdminJSExpress = require('@adminjs/express');
+// const AdminJSMongoose = require('@adminjs/mongoose');
+// const comp = require('./components.js');
+import bodyParser from "body-parser";
+import express from 'express';
+import bcrypt from 'bcrypt';
+//import date from_"helper_functions/date.js";
+import mongoose from "mongoose";
+import AdminJS from 'adminjs';
+import AdminJSExpress from '@adminjs/express';
+import AdminJSMongoose from '@adminjs/mongoose';
+//const comp = require('./components.js';
+//import { Components } from './components.js';
 
 AdminJS.registerAdapter({
   Resource: AdminJSMongoose.Resource,
@@ -14,10 +26,10 @@ AdminJS.registerAdapter({
 const app = express();
 
 app.use(express.static("public"));
-app.use(bodyParser.urlencoded({extended: true}));
+//app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
-const today = date.getDate();
+//const today = date.getDate();
 
 /* ------------------------------------ Set up database ------------------------------------ */
 
@@ -70,7 +82,7 @@ const itemSchema = {
   },
   checklist: {
     type: Boolean,
-    required: true
+    required: false
   }
 };
 
@@ -106,19 +118,68 @@ const admin = new AdminJS({
             }
             return request
           },
-        }
+          isAccessible: ({ currentAdmin }) => currentAdmin && currentAdmin.role === 'admin',
+        },
+        edit: {
+          isAccessible: ({ currentAdmin }) => currentAdmin && currentAdmin.role === 'admin',
+        },
+        delete: {
+          isAccessible: ({ currentAdmin }) => currentAdmin && currentAdmin.role === 'admin',
+        },
+        list: {
+          isAccessible: ({ currentAdmin }) => currentAdmin && currentAdmin.role === 'admin',
+        },
       }
+    }
+  },
+  {
+  resource: Item,
+    options: {
+      actions: {
+        edit: {
+          isAccessible: ({ currentAdmin }) => currentAdmin && currentAdmin.role === 'admin',
+        },
+        delete: {
+          isAccessible: ({ currentAdmin }) => currentAdmin && currentAdmin.role === 'admin',
+        },
+      },
+      properties: {
+        image: {
+          components: {
+            edit: AdminJS.bundle("/workspaces/item-input-admin/my-input.jsx"), // this is our custom component
+          },
+        },
+      },
     }
   }],
   rootPath: '/admin',
+  branding: {
+    companyName: 'Item Input Dashboard',
+  },
 });
 
+//AdminJS.watch();
+
 // Build and use a router which will handle all AdminJS routes
+//const adminRouter = AdminJSExpress.buildRouter(admin);
 const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
   authenticate: async (email, password) => {
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email });
     if (user) {
-      const matched = await bcrypt.compare(password, user.encryptedPassword)
+      console.log(user.email);
+      var mat;
+      const matched = bcrypt.compareSync(password, user.encryptedPassword); /*, (err, res) => {
+          if(err) {
+              console.log('Comparison error: ', err);
+          } 
+          if(res) {
+            mat = true;
+            return user;
+        }
+      }
+      );*/
+      console.log(matched);
+      console.log(mat);
       if (matched) {
         return user
       }
@@ -129,6 +190,8 @@ const adminRouter = AdminJSExpress.buildAuthenticatedRouter(admin, {
 });
 // app.use(admin.options.rootPath, adminRouter);
 app.use(admin.options.rootPath, adminRouter);
+
+app.use(bodyParser.json())
 
 /* ------------------------------------ APIs ------------------------------------ */
 
@@ -142,7 +205,7 @@ app.route("/items")
     const etc = Item.find((err, foundItems) => {
         res.render("list", {
           itemsList: foundItems,
-           day: today,
+           //day: today,
         });
       })
   })
