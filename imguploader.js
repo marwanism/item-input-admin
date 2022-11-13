@@ -3,6 +3,7 @@ document.querySelector('#image').addEventListener('change', event => {
   });
 
   const handleImageUpload = event => {
+    console.log("SAM3AK");
     const files = event.target.files
     const formData = new FormData()
     formData.append('image', files[0]);
@@ -21,7 +22,8 @@ document.querySelector('#image').addEventListener('change', event => {
     .then(data => {
       console.log(data);
       console.log(data["data"]["display_url"]);
-      document.querySelector('#imgurl').value = data["data"]["display_url"];
+      document.querySelector('#image').value = data["data"]["display_url"];
+      document.getElementById('imgdisplay').src = data["data"]["display_url"];
     })
     .catch(error => {
       console.error(error)
