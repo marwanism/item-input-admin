@@ -2,8 +2,8 @@ import React from 'react';
 
 const handleImageUpload = event => {
     console.log("SAM3AK");
-    const files = event.target.files
-    const formData = new FormData()
+    const files = event.target.files;
+    const formData = new FormData();
     formData.append('image', files[0]);
     // formData.append('key', '18d849e40f3ae34587573c4996022988');
 
@@ -18,23 +18,38 @@ const handleImageUpload = event => {
     })
     .then(response => response.json())
     .then(data => {
-      console.log(data);
+      //console.log(data);
       console.log(data["data"]["display_url"]);
-      document.getElementById('image').value = data["data"]["display_url"];
-      document.getElementById('imgdisplay').src = data["data"]["display_url"];
+      formData.append('image', data["data"]["display_url"]);
+      //document.getElementById('image').value = data["data"]["display_url"];
+      //document.getElementById('imgdisplay').src = data["data"]["display_url"];
     })
     .catch(error => {
       console.error(error)
     })
   };
 // just some regular React component
-const MyInputComponent = () => <div className="form-group__FormGroup-sc-dpyqjh-0 frCjYo">
+const MyInputComponent = () => React.createElement(
+  "div",
+  { className: "form-group__FormGroup-sc-dpyqjh-0 frCjYo" },
+  React.createElement(
+    "label",
+    { htmlFor: "imageup", required: true, className: "label__Label-sc-o90s7d-0 jtfEBv adminjs_Label" },
+    "Image"
+  ),
+  React.createElement("input", { id: "imageup", name: "imageup", type: "file", required: true, className: "input__Input-sc-y0u0lk-0 cKQyjl adminjs_Input", onChange: handleImageUpload }),
+  React.createElement("input", { type: "text", name: "image", style: { display: 'none' }, id: "imgurl", required: true }),
+  React.createElement("img", { id: "imgdisplay" }),
+  React.createElement("div", { className: "text__Text-sc-wqowgj-0 form-message__FormMessage-sc-ns8om8-0 fPFvgK jNCBSG adminjs_Text" })
+);
+
+{/* <div className="form-group__FormGroup-sc-dpyqjh-0 frCjYo">
 <label htmlFor="imageup" required className="label__Label-sc-o90s7d-0 jtfEBv adminjs_Label">Image</label>
 <input id="imageup" name="imageup" type="file" required className="input__Input-sc-y0u0lk-0 cKQyjl adminjs_Input" onChange={handleImageUpload} />
-<input type="text" name="image" style={{display: 'none'}} id="imgurl" required />
+<input type="text" name="image" style={{display: 'none'}} id="imgurl" value="none" required />
 <img id="imgdisplay" />
 <div className="text__Text-sc-wqowgj-0 form-message__FormMessage-sc-ns8om8-0 fPFvgK jNCBSG adminjs_Text" />
-</div>;
+</div>; */}
 
 // const MyInputComponent = React.createElement('div', {
 //     children: React.createElement('div', {className: "blue" }),
